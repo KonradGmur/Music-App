@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Music App</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css" integrity="sha512-rRQtF4V2wtAvXsou4iUAs2kXHi3Lj9NE7xJR77DE7GHsxgY9RTWy93dzMXgDIG8ToiRTD45VsDNdTiUagOFeZA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" integrity="sha512-YWzhKL2whUzgiheMoBFwW8CKV4qpHQAEuvilg9FAn5VJUDwKZZxkJNuGM4XkWuk94WCrrwslk8yWNGmY1EduTA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<main class="audioPlayer" id="app">
+		<a class="retweet"><i class="fas fa-retweet"  :class="{'isActive': isPlaylistActive}"></i></a>
+		<a class="random"><i class="fas fa-random"  :class="{'isActive': isPlaylistActive}"></i></a>
+		<a class="circle"><i class="fas fa-redo" :class="{'isActive': isPlaylistActive}"></i></a>
+		<a class="nav-icon" v-on:click="isPlaylistActive=!isPlaylistActive" :class="{'isActive': isPlaylistActive}" title="Music List">
+			  <span></span>
+			  <span></span>
+			  <span></span>
+		</a>
+		
+		<div class="audioPlayerList" :class="{'isActive': isPlaylistActive}">
+			<a class="reply"><i class="fas fa-reply" v-on:click="isPlaylistActive=!isPlaylistActive"></i></a>
+			<p class="playlist">Playlist</p>
+			<div class="item" v-for="(item,index) in musicPlaylist" v-bind:class="{ 'isActive':isCurrentSong(index) }" v-on:click="changeSong(index),isPlaylistActive=!isPlaylistActive">
+				<p class="title">{{item.time}} {{ item.title }}</p>
+				<span class="artist">{{ item.artist }}</span>
+				<i class="fas fa-share-alt share"></i>
+				<i class="fas fa-heart heart"></i>	
+			</div>
+			
+				<!-- <p class="debugToggle" v-on:click="toggleDebug()">debug: {{ debug }}</p> -->
+	
+		</div>
+		<div class="audioPlayerUI" :class="{'isDisabled': isPlaylistActive}">
+			<div class="albumImage">
+				<div class="shadow-top"></div>
+				<transition name="ballmove" enter-active-class="animated zoomIn" leave-active-class="animated fadeOutDown" mode="out-in">
+					<img @load="onImageLoaded()" :src="musicPlaylist[currentSong].image" :key="currentSong" ondragstart="return false;" id="playerAlbumArt">
+				</transition>
+				<div class="shadow-down"></div>
+				<div class="loader" :key="currentSong">Loading...</div>
+			</div>
+			<div class="albumDetails">
+				<transition name="slide-fade" mode="out-in">
+					<p class="title" :key="currentSong">{{ musicPlaylist[currentSong].title }}</p>
+				</transition>
+				<transition name="slide-fade" mode="out-in">
+					<p class="artist" :key="currentSong">{{ musicPlaylist[currentSong].artist }}</p>
+			</div>
+				
+				<div class="currentTimeContainer" style="text-align:center">
+				<!-- <span class="currentTime">{{ currentTime | fancyTimeFormat }}</span>
+				<span class="totalTime"> {{ trackDuration | fancyTimeFormat }}</span> -->
+				<!--<span style="color:black">({{ currentSong+1 }}/{{ musicPlaylist.length }})</span>-->
+			</div>
+				<div class="currentProgressBar">
+				<div class="currentProgress" :style="{ width: currentProgressBar + '%' }"></div>
+			</div>
+	
+			<div class="playerButtons">
+				<a class="button share"><i class="fas fa-share-alt"></i></a>
+				<a class="button" :class="{'isDisabled':(currentSong==0)}" v-on:click="prevSong()" title="Previous Song"><i class="fas fa-chevron-circle-left"></i></i></a>
+				<a class="button play" v-on:click="playAudio()" title="Play/Pause Song">
+					<transition name="slide-fade" mode="out-in">
+						<i class="zmdi" :class="[currentlyStopped ? 'zmdi-stop' : (currentlyPlaying ? 'zmdi-pause-circle' : 'zmdi-play-circle')]" :key="1"></i>
+					</transition>
+				</a>
+				<a class="button" :class="{'isDisabled':(currentSong==musicPlaylist.length-1)}" v-on:click="nextSong()" title="Next Song"><i class="fas fa-chevron-circle-right"></i></a>
+				<a class="button heart"><i class="fas fa-heart"></i></a>
+			</div>
+		</div>
+	</main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.14/vue.min.js" integrity="sha512-XdUZ5nrNkVySQBnnM5vzDqHai823Spoq1W3pJoQwomQja+o4Nw0Ew1ppxo5bhF2vMug6sfibhKWcNJsG8Vj9tg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js" integrity="sha512-7x3zila4t2qNycrtZ31HO0NnJr8kg2VI67YLoRSyi9hGhRN66FHYWr7Axa9Y1J9tGYHVBPqIjSE1ogHrJTz51g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script  src="./app.js"></script>
+
+</body>
+</html>
